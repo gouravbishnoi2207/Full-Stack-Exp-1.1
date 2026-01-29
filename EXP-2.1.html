@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Character Counter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: var(--text-dark);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #textInput {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+            color: var(--text-dark);
+            transition: var(--transition);
+            background-color: var(--bg-light);
+        }
+        
+        #textInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        /* Status-based styles */
+        
+        #textInput.warning {
+            border-color: var(--warning-color);
+            background-color: rgba(245, 158, 11, 0.05);
+        }
+        
+        #textInput.warning:focus {
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+        
+        #textInput.danger {
+            border-color: var(--danger-color);
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+        
+        #textInput.danger:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        
+        .counter-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            gap: 20px;
+        }
+        
+        .counter-display {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        
+        .current-count {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .max-count {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        .progress-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            border-radius: 10px;
+            width: 0%;
+            transition: var(--transition);
+        }
+        
+        .progress-fill.warning {
+            background-color: var(--warning-color);
+        }
+        
+        .progress-fill.danger {
+            background-color: var(--danger-color);
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-light);
+            text-align: right;
+        }
+        
+        .status-message {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+        
+        .status-message.show {
+            display: block;
+        }
+        
+        .status-message.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-message.warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .status-message.danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .info-box {
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 25px;
+            font-size: 13px;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .info-box strong {
+            color: var(--text-dark);
+        }
+        /* Responsive design */
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+            }
+            .header h1 {
+                font-size: 22px;
+            }
+            .counter-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .progress-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Character Counter</h1>
+            <p>Real-time feedback as you type</p>
+        </div>
+
+        <div class="input-wrapper">
+            <label class="input-label" for="textInput">Your Message</label>
+            <textarea id="textInput" placeholder="Start typing here... Write your thoughts, feedback, or message. Character count updates in real-time!"></textarea>
+        </div>
+
+        <div class="counter-section">
+            <div class="counter-display">
+                <span class="current-count" id="charCount">0</span>
+                <span class="max-count" id="maxCount">/ 200</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0% used</div>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="info-box">
+            <strong>✨ Features:</strong><br> • Green progress bar when using less than 75% of limit<br> • Yellow warning when between 75-95%<br> • Red alert when exceeding 95% of limit<br> • Real-time updates with smooth animations
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const MAX_CHARACTERS = 200;
+        const WARNING_THRESHOLD = 75; // percentage
+        const DANGER_THRESHOLD = 95; // percentage
+
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const charCount = document.getElementById('charCount');
+        const maxCount = document.getElementById('maxCount');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const statusMessage = document.getElementById('statusMessage');
+
+        /**
+         * Update the character counter and visual feedback
+         */
+        function updateCounter() {
+            const currentLength = textInput.value.length;
+            const percentage = (currentLength / MAX_CHARACTERS) * 100;
+
+            // Update counter display
+            charCount.textContent = currentLength;
+            maxCount.textContent = `/ ${MAX_CHARACTERS}`;
+
+            // Update progress bar
+            progressFill.style.width = Math.min(percentage, 100) + '%';
+            progressText.textContent = Math.round(percentage) + '% used';
+
+            // Update status based on percentage
+            updateStatus(percentage, currentLength);
+
+            // Update visual states
+            updateVisualState(percentage);
+        }
+
+        /**
+         * Update status message based on character count
+         */
+        function updateStatus(percentage, currentLength) {
+            statusMessage.classList.remove('show', 'success', 'warning', 'danger');
+
+            if (currentLength === 0) {
+                // No message when empty
+                return;
+            }
+
+            if (percentage >= DANGER_THRESHOLD) {
+                statusMessage.classList.add('show', 'danger');
+                statusMessage.textContent = `⚠️ Warning: You've used ${Math.round(percentage)}% of your character limit!`;
+            } else if (percentage >= WARNING_THRESHOLD) {
+                statusMessage.classList.add('show', 'warning');
+                statusMessage.textContent = `📌 Getting close: ${Math.round(percentage)}% of limit used`;
+            } else if (currentLength > 0) {
+                statusMessage.classList.add('show', 'success');
+                statusMessage.textContent = `✓ Looking good! ${MAX_CHARACTERS - currentLength} characters remaining`;
+            }
+        }
+
+        /**
+         * Update visual states of input based on character count
+         */
+        function updateVisualState(percentage) {
+            // Remove previous classes
+            textInput.classList.remove('warning', 'danger');
+            progressFill.classList.remove('warning', 'danger');
+
+            // Add appropriate class
+            if (percentage >= DANGER_THRESHOLD) {
+                textInput.classList.add('danger');
+                progressFill.classList.add('danger');
+            } else if (percentage >= WARNING_THRESHOLD) {
+                textInput.classList.add('warning');
+                progressFill.classList.add('warning');
+            }
+        }
+
+        /**
+         * Handle input event with debouncing for performance
+         */
+        let debounceTimer;
+        textInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(updateCounter, 50);
+        });
+
+        // Also update immediately without debounce for visual feedback
+        textInput.addEventListener('input', updateCounter);
+
+        // Initialize counter on page load
+        updateCounter();
+    </script>
+</body>
+
+</html>

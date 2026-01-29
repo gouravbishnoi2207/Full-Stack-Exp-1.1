@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Product Filter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        /* Header Section */
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        /* Filter Controls Section */
+        
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-header h2 {
+            color: var(--text-dark);
+            font-size: 20px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .select-box,
+        .search-input {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background-color: white;
+            color: var(--text-dark);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .select-box:hover,
+        .search-input:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .select-box:focus,
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .search-input {
+            cursor: text;
+            min-width: 250px;
+        }
+        
+        .btn-reset {
+            padding: 12px 24px;
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-reset:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-reset:active {
+            transform: translateY(0);
+        }
+        /* Results Info */
+        
+        .results-info {
+            color: var(--text-light);
+            font-size: 14px;
+            padding: 15px 0;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .results-count {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        /* Products Grid */
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Product Card */
+        
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .product-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            transition: var(--transition);
+        }
+        
+        .product-card:hover .product-image::after {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-category {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            background-color: rgba(59, 130, 246, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+        
+        .product-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        
+        .product-description {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            line-height: 1.5;
+            flex: 1;
+        }
+        
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .product-price {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .price-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .price-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+        
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: var(--accent-color);
+        }
+        
+        .stars {
+            color: var(--accent-color);
+            letter-spacing: 2px;
+        }
+        /* Empty State */
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            font-size: 22px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        /* Responsive Design */
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 26px;
+            }
+            .filter-section {
+                padding: 20px;
+            }
+            .filter-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .filter-controls {
+                width: 100%;
+                flex-direction: column;
+            }
+            .control-group {
+                width: 100%;
+            }
+            .select-box,
+            .search-input {
+                width: 100%;
+            }
+            .search-input {
+                min-width: unset;
+            }
+            .btn-reset {
+                width: 100%;
+            }
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 20px;
+            }
+            .product-image {
+                height: 200px;
+                font-size: 60px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 22px;
+            }
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Product Store</h1>
+            <p>Dynamic filtering and sorting with smooth animations</p>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-section">
+            <div class="filter-header">
+                <h2>Filter & Sort</h2>
+            </div>
+
+            <div class="filter-controls">
+                <div class="control-group">
+                    <label class="control-label">Sort By</label>
+                    <select class="select-box" id="sortSelect">
+                        <option value="featured">Featured</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Highest Rated</option>
+                        <option value="newest">Newest</option>
+                        <option value="name">Name: A to Z</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Category</label>
+                    <select class="select-box" id="categorySelect">
+                        <option value="">All Categories</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="fashion">Fashion</option>
+                        <option value="home">Home & Garden</option>
+                        <option value="sports">Sports</option>
+                        <option value="books">Books</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Search</label>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search products...">
+                </div>
+
+                <button class="btn-reset" id="resetBtn">Reset</button>
+            </div>
+
+            <div class="results-info">
+                Showing <span class="results-count" id="resultsCount">0</span> products
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="productsGrid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-icon">📭</div>
+            <h3>No Products Found</h3>
+            <p>Try adjusting your filters or search terms</p>
+        </div>
+    </div>
+
+    <script>
+        // Product Database
+        const products = [{
+            id: 1,
+            name: 'Wireless Headphones',
+            category: 'electronics',
+            price: 129.99,
+            rating: 4.8,
+            reviews: 342,
+            emoji: '🎧',
+            description: 'Premium noise-cancelling headphones'
+        }, {
+            id: 2,
+            name: 'Smart Watch',
+            category: 'electronics',
+            price: 299.99,
+            rating: 4.6,
+            reviews: 218,
+            emoji: '⌚',
+            description: 'Track your fitness and health metrics'
+        }, {
+            id: 3,
+            name: 'Winter Jacket',
+            category: 'fashion',
+            price: 89.99,
+            rating: 4.4,
+            reviews: 156,
+            emoji: '🧥',
+            description: 'Warm and stylish winter wear'
+        }, {
+            id: 4,
+            name: 'Running Shoes',
+            category: 'sports',
+            price: 119.99,
+            rating: 4.7,
+            reviews: 289,
+            emoji: '👟',
+            description: 'Comfortable and durable athletic shoes'
+        }, {
+            id: 5,
+            name: 'Coffee Maker',
+            category: 'home',
+            price: 149.99,
+            rating: 4.5,
+            reviews: 428,
+            emoji: '☕',
+            description: 'Brew perfect coffee every morning'
+        }, {
+            id: 6,
+            name: 'Programming Book',
+            category: 'books',
+            price: 45.99,
+            rating: 4.9,
+            reviews: 892,
+            emoji: '📚',
+            description: 'Master modern web development'
+        }, {
+            id: 7,
+            name: 'Gaming Mouse',
+            category: 'electronics',
+            price: 79.99,
+            rating: 4.6,
+            reviews: 534,
+            emoji: '🖱️',
+            description: 'High-precision gaming peripheral'
+        }, {
+            id: 8,
+            name: 'Yoga Mat',
+            category: 'sports',
+            price: 39.99,
+            rating: 4.3,
+            reviews: 276,
+            emoji: '🧘',
+            description: 'Premium non-slip exercise mat'
+        }, {
+            id: 9,
+            name: 'Designer Sunglasses',
+            category: 'fashion',
+            price: 199.99,
+            rating: 4.7,
+            reviews: 445,
+            emoji: '😎',
+            description: 'Stylish UV protection eyewear'
+        }, {
+            id: 10,
+            name: 'Plant Pot',
+            category: 'home',
+            price: 29.99,
+            rating: 4.2,
+            reviews: 183,
+            emoji: '🌱',
+            description: 'Beautiful ceramic planter'
+        }, {
+            id: 11,
+            name: 'Bluetooth Speaker',
+            category: 'electronics',
+            price: 99.99,
+            rating: 4.5,
+            reviews: 612,
+            emoji: '🔊',
+            description: 'Portable premium sound quality'
+        }, {
+            id: 12,
+            name: 'Desk Lamp',
+            category: 'home',
+            price: 69.99,
+            rating: 4.4,
+            reviews: 267,
+            emoji: '💡',
+            description: 'Modern LED task lighting'
+        }];
+
+        // DOM Elements
+        const productsGrid = document.getElementById('productsGrid');
+        const emptyState = document.getElementById('emptyState');
+        const sortSelect = document.getElementById('sortSelect');
+        const categorySelect = document.getElementById('categorySelect');
+        const searchInput = document.getElementById('searchInput');
+        const resetBtn = document.getElementById('resetBtn');
+        const resultsCount = document.getElementById('resultsCount');
+
+        /**
+         * Filter and sort products based on current criteria
+         */
+        function filterAndSortProducts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCategory = categorySelect.value;
+            const sortBy = sortSelect.value;
+
+            // Filter products
+            let filtered = products.filter(product => {
+                const matchesSearch = product.name.toLowerCase().includes(searchTerm) ||
+                    product.description.toLowerCase().includes(searchTerm);
+                const matchesCategory = !selectedCategory || product.category === selectedCategory;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            // Sort products
+            filtered = sortProducts(filtered, sortBy);
+
+            // Render products
+            renderProducts(filtered);
+
+            // Update results count
+            resultsCount.textContent = filtered.length;
+
+            // Show/hide empty state
+            if (filtered.length === 0) {
+                emptyState.style.display = 'block';
+                productsGrid.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                productsGrid.style.display = 'grid';
+            }
+        }
+
+        /**
+         * Sort products based on selected criteria
+         */
+        function sortProducts(productList, sortBy) {
+            const sorted = [...productList];
+
+            switch (sortBy) {
+                case 'price-low':
+                    sorted.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price-high':
+                    sorted.sort((a, b) => b.price - a.price);
+                    break;
+                case 'rating':
+                    sorted.sort((a, b) => b.rating - a.rating);
+                    break;
+                case 'newest':
+                    sorted.reverse();
+                    break;
+                case 'name':
+                    sorted.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'featured':
+                default:
+                    sorted.sort((a, b) => a.id - b.id);
+            }
+
+            return sorted;
+        }
+
+        /**
+         * Render products to the grid
+         */
+        function renderProducts(productList) {
+            productsGrid.innerHTML = productList.map(product => `
+                <div class="product-card">
+                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-content">
+                        <span class="product-category">${product.category}</span>
+                        <h3 class="product-name">${product.name}</h3>
+                        <p class="product-description">${product.description}</p>
+                        <div class="product-footer">
+                            <div class="product-price">
+                                <span class="price-label">Price</span>
+                                <span class="price-amount">$${product.price.toFixed(2)}</span>
+                            </div>
+                            <div class="rating">
+                                <span class="stars">${'⭐'.repeat(Math.round(product.rating))}</span>
+                                <span>${product.rating}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Reset all filters
+         */
+        function resetFilters() {
+            searchInput.value = '';
+            categorySelect.value = '';
+            sortSelect.value = 'featured';
+            filterAndSortProducts();
+        }
+
+        // Event Listeners
+        sortSelect.addEventListener('change', filterAndSortProducts);
+        categorySelect.addEventListener('change', filterAndSortProducts);
+        searchInput.addEventListener('input', filterAndSortProducts);
+        resetBtn.addEventListener('click', resetFilters);
+
+        // Initial render
+        filterAndSortProducts();
+    </script>
+</body>
+
+</html>

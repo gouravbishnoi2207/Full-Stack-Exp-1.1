@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive SVG Drawing Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --transition: all 0.3s ease;
+        }
+        
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+        /* Toolbar */
+        
+        .toolbar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+        
+        .toolbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .tool-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .section-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        /* Buttons */
+        
+        .btn {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .btn.danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        .btn.danger:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn.success {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .btn.success:hover {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* Shape buttons grid */
+        
+        .shape-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .shape-btn {
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .shape-btn:hover {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .shape-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .shape-icon {
+            font-size: 24px;
+        }
+        /* Color picker */
+        
+        .color-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .color-picker {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .color-picker:hover {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+        /* Slider */
+        
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .slider-label {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        /* Stats */
+        
+        .stats {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-dark);
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        
+        .stat-item:last-child {
+            margin-bottom: 0;
+        }
+        /* Canvas area */
+        
+        .canvas-area {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .canvas-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .canvas-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .canvas-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .canvas-controls .btn {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        #canvas {
+            flex: 1;
+            cursor: crosshair;
+            background: white;
+        }
+        /* Status bar */
+        
+        .status-bar {
+            padding: 10px 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cursor-coords {
+            font-family: 'Courier New', monospace;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        /* Responsive */
+        
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+            .toolbar {
+                width: 100%;
+                max-height: 150px;
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            .tool-section {
+                flex-direction: row;
+                gap: 15px;
+                min-width: fit-content;
+            }
+            #canvas {
+                min-height: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+                gap: 10px;
+            }
+            .toolbar {
+                max-height: 120px;
+                padding: 15px;
+            }
+            .shape-buttons {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div>
+                <div class="toolbar-title">✏️ Drawing Tool</div>
+            </div>
+
+            <!-- Shape Tools -->
+            <div class="tool-section">
+                <div class="section-header">Shapes</div>
+                <div class="shape-buttons">
+                    <button class="shape-btn active" data-shape="line" title="Draw line">
+                        <span class="shape-icon">/</span>
+                        <span>Line</span>
+                    </button>
+                    <button class="shape-btn" data-shape="rectangle" title="Draw rectangle">
+                        <span class="shape-icon">▭</span>
+                        <span>Rect</span>
+                    </button>
+                    <button class="shape-btn" data-shape="circle" title="Draw circle">
+                        <span class="shape-icon">●</span>
+                        <span>Circle</span>
+                    </button>
+                    <button class="shape-btn" data-shape="freehand" title="Freehand drawing">
+                        <span class="shape-icon">✍</span>
+                        <span>Pen</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Color & Style -->
+            <div class="tool-section">
+                <div class="section-header">Style</div>
+                <div class="color-control">
+                    <label>Stroke Color</label>
+                    <input type="color" id="colorPicker" class="color-picker" value="#3b82f6">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Stroke Width</span>
+                        <span id="widthValue">2</span>px
+                    </div>
+                    <input type="range" id="strokeWidth" class="slider" min="1" max="20" value="2">
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="tool-section">
+                <div class="section-header">Actions</div>
+                <button class="btn danger" id="undoBtn" title="Undo last action (Ctrl+Z)">
+                    ↶ Undo
+                </button>
+                <button class="btn" id="clearBtn" title="Clear entire canvas">
+                    🗑️ Clear
+                </button>
+                <button class="btn success" id="downloadBtn" title="Download as SVG">
+                    ⬇️ Download
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="tool-section">
+                <div class="section-header">Stats</div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span>Shapes:</span>
+                        <span id="shapeCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>History:</span>
+                        <span id="historyCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Zoom:</span>
+                        <span id="zoomLevel">100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+            <div class="canvas-header">
+                <span class="canvas-title">Drawing Canvas</span>
+                <div class="canvas-controls">
+                    <button class="btn" id="zoomInBtn" title="Zoom in">🔍+</button>
+                    <button class="btn" id="zoomResetBtn" title="Reset zoom">⟲</button>
+                    <button class="btn" id="zoomOutBtn" title="Zoom out">🔍−</button>
+                </div>
+            </div>
+            <svg id="canvas"></svg>
+            <div class="status-bar">
+                <span>Ready</span>
+                <span class="cursor-coords" id="coords">X: 0, Y: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            MIN_ZOOM: 50,
+            MAX_ZOOM: 300,
+            ZOOM_STEP: 20
+        };
+
+        // State
+        const state = {
+            isDrawing: false,
+            currentShape: 'line',
+            currentColor: '#3b82f6',
+            strokeWidth: 2,
+            startX: 0,
+            startY: 0,
+            zoom: 100,
+            history: [],
+            preview: null
+        };
+
+        // DOM Elements
+        const canvas = document.getElementById('canvas');
+        const colorPicker = document.getElementById('colorPicker');
+        const strokeWidthSlider = document.getElementById('strokeWidth');
+        const widthValue = document.getElementById('widthValue');
+        const shapeButtons = document.querySelectorAll('.shape-btn');
+        const undoBtn = document.getElementById('undoBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const shapeCount = document.getElementById('shapeCount');
+        const historyCount = document.getElementById('historyCount');
+        const zoomLevel = document.getElementById('zoomLevel');
+        const coords = document.getElementById('coords');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomResetBtn = document.getElementById('zoomResetBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+
+        /**
+         * Set canvas size to match container
+         */
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.setAttribute('width', rect.width);
+            canvas.setAttribute('height', rect.height);
+        }
+
+        /**
+         * Save current state to history
+         */
+        function saveState() {
+            state.history.push(canvas.innerHTML);
+            updateStats();
+        }
+
+        /**
+         * Update statistics display
+         */
+        function updateStats() {
+            const shapes = canvas.querySelectorAll('line, rect, circle, path').length;
+            shapeCount.textContent = shapes;
+            historyCount.textContent = state.history.length;
+            undoBtn.disabled = state.history.length === 0;
+        }
+
+        /**
+         * Get coordinates relative to canvas
+         */
+        function getCanvasCoords(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left) / (state.zoom / 100);
+            const y = (event.clientY - rect.top) / (state.zoom / 100);
+            return {
+                x,
+                y
+            };
+        }
+
+        /**
+         * Create SVG element with attributes
+         */
+        function createSvgElement(tag, attrs) {
+            const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            Object.keys(attrs).forEach(key => {
+                element.setAttribute(key, attrs[key]);
+            });
+            return element;
+        }
+
+        /**
+         * Draw line
+         */
+        function drawLine(x1, y1, x2, y2) {
+            const line = createSvgElement('line', {
+                x1,
+                y1,
+                x2,
+                y2,
+                stroke: state.currentColor,
+                strokeWidth: state.strokeWidth,
+                strokeLinecap: 'round'
+            });
+            canvas.appendChild(line);
+        }
+
+        /**
+         * Draw rectangle
+         */
+        function drawRectangle(x1, y1, x2, y2) {
+            const width = Math.abs(x2 - x1);
+            const height = Math.abs(y2 - y1);
+            const x = Math.min(x1, x2);
+            const y = Math.min(y1, y2);
+
+            const rect = createSvgElement('rect', {
+                x,
+                y,
+                width,
+                height,
+                fill: 'none',
+                stroke: state.currentColor,
+                strokeWidth: state.strokeWidth,
+                rx: 4
+            });
+            canvas.appendChild(rect);
+        }
+
+        /**
+         * Draw circle
+         */
+        function drawCircle(x1, y1, x2, y2) {
+            const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) / 2;
+            const cx = (x1 + x2) / 2;
+            const cy = (y1 + y2) / 2;
+
+            const circle = createSvgElement('circle', {
+                cx,
+                cy,
+                r: radius,
+                fill: 'none',
+                stroke: state.currentColor,
+                strokeWidth: state.strokeWidth
+            });
+            canvas.appendChild(circle);
+        }
+
+        /**
+         * Draw freehand path
+         */
+        function startFreehand(x, y) {
+            state.preview = createSvgElement('path', {
+                d: `M ${x} ${y}`,
+                fill: 'none',
+                stroke: state.currentColor,
+                strokeWidth: state.strokeWidth,
+                strokeLinecap: 'round',
+                strokeLinejoin: 'round'
+            });
+            canvas.appendChild(state.preview);
+        }
+
+        /**
+         * Continue freehand drawing
+         */
+        function continueFreehand(x, y) {
+            if (state.preview) {
+                const currentD = state.preview.getAttribute('d');
+                state.preview.setAttribute('d', `${currentD} L ${x} ${y}`);
+            }
+        }
+
+        /**
+         * Undo last action
+         */
+        function undo() {
+            if (state.history.length > 0) {
+                canvas.innerHTML = state.history.pop();
+                updateStats();
+            }
+        }
+
+        /**
+         * Clear canvas
+         */
+        function clear() {
+            if (confirm('Are you sure you want to clear the entire canvas?')) {
+                saveState();
+                canvas.innerHTML = '';
+                updateStats();
+            }
+        }
+
+        /**
+         * Download canvas as SVG
+         */
+        function download() {
+            const svgData = canvas.outerHTML;
+            const blob = new Blob([svgData], {
+                type: 'image/svg+xml'
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `drawing-${Date.now()}.svg`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        /**
+         * Update zoom level
+         */
+        function setZoom(newZoom) {
+            state.zoom = Math.max(CONFIG.MIN_ZOOM, Math.min(newZoom, CONFIG.MAX_ZOOM));
+            canvas.style.transform = `scale(${state.zoom / 100})`;
+            canvas.style.transformOrigin = 'top left';
+            zoomLevel.textContent = state.zoom + '%';
+        }
+
+        /**
+         * Mouse down handler
+         */
+        function handleMouseDown(event) {
+            if (event.button !== 0) return; // Only left mouse button
+
+            const {
+                x,
+                y
+            } = getCanvasCoords(event);
+            state.isDrawing = true;
+            state.startX = x;
+            state.startY = y;
+
+            if (state.currentShape === 'freehand') {
+                saveState();
+                startFreehand(x, y);
+            }
+        }
+
+        /**
+         * Mouse move handler
+         */
+        function handleMouseMove(event) {
+            const {
+                x,
+                y
+            } = getCanvasCoords(event);
+            coords.textContent = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
+
+            if (!state.isDrawing) return;
+
+            // Remove preview for non-freehand shapes
+            if (state.currentShape !== 'freehand' && state.preview) {
+                state.preview.remove();
+                state.preview = null;
+            }
+
+            // Create preview
+            switch (state.currentShape) {
+                case 'line':
+                    state.preview = createSvgElement('line', {
+                        x1: state.startX,
+                        y1: state.startY,
+                        x2: x,
+                        y2: y,
+                        stroke: state.currentColor,
+                        strokeWidth: state.strokeWidth,
+                        strokeLinecap: 'round',
+                        opacity: 0.5
+                    });
+                    break;
+                case 'rectangle':
+                    const rectWidth = Math.abs(x - state.startX);
+                    const rectHeight = Math.abs(y - state.startY);
+                    state.preview = createSvgElement('rect', {
+                        x: Math.min(state.startX, x),
+                        y: Math.min(state.startY, y),
+                        width: rectWidth,
+                        height: rectHeight,
+                        fill: 'none',
+                        stroke: state.currentColor,
+                        strokeWidth: state.strokeWidth,
+                        rx: 4,
+                        opacity: 0.5
+                    });
+                    break;
+                case 'circle':
+                    const radius = Math.sqrt(Math.pow(x - state.startX, 2) + Math.pow(y - state.startY, 2)) / 2;
+                    state.preview = createSvgElement('circle', {
+                        cx: (state.startX + x) / 2,
+                        cy: (state.startY + y) / 2,
+                        r: radius,
+                        fill: 'none',
+                        stroke: state.currentColor,
+                        strokeWidth: state.strokeWidth,
+                        opacity: 0.5
+                    });
+                    break;
+                case 'freehand':
+                    continueFreehand(x, y);
+                    return;
+            }
+
+            if (state.preview) {
+                canvas.appendChild(state.preview);
+            }
+        }
+
+        /**
+         * Mouse up handler
+         */
+        function handleMouseUp(event) {
+            if (!state.isDrawing) return;
+
+            state.isDrawing = false;
+            const {
+                x,
+                y
+            } = getCanvasCoords(event);
+
+            if (state.preview) {
+                state.preview.remove();
+                state.preview = null;
+            }
+
+            // Only draw if mouse moved
+            if (x !== state.startX || y !== state.startY) {
+                saveState();
+
+                switch (state.currentShape) {
+                    case 'line':
+                        drawLine(state.startX, state.startY, x, y);
+                        break;
+                    case 'rectangle':
+                        drawRectangle(state.startX, state.startY, x, y);
+                        break;
+                    case 'circle':
+                        drawCircle(state.startX, state.startY, x, y);
+                        break;
+                }
+
+                updateStats();
+            }
+        }
+
+        // Event Listeners
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mouseleave', () => state.isDrawing = false);
+
+        // Shape selection
+        shapeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                shapeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.currentShape = btn.dataset.shape;
+            });
+        });
+
+        // Color and style
+        colorPicker.addEventListener('change', (e) => {
+            state.currentColor = e.target.value;
+        });
+
+        strokeWidthSlider.addEventListener('input', (e) => {
+            state.strokeWidth = parseInt(e.target.value);
+            widthValue.textContent = state.strokeWidth;
+        });
+
+        // Actions
+        undoBtn.addEventListener('click', undo);
+        clearBtn.addEventListener('click', clear);
+        downloadBtn.addEventListener('click', download);
+
+        // Zoom controls
+        zoomInBtn.addEventListener('click', () => setZoom(state.zoom + CONFIG.ZOOM_STEP));
+        zoomResetBtn.addEventListener('click', () => setZoom(100));
+        zoomOutBtn.addEventListener('click', () => setZoom(state.zoom - CONFIG.ZOOM_STEP));
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+        });
+
+        // Initialize
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        updateStats();
+    </script>
+</body>
+
+</html>
